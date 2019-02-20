@@ -62,13 +62,13 @@ class rknn_server:
         e_list = [self.rfd, self.wfd]
 
         while True:
-            fd_r_list, fd_w_list, fd_e_list = select.select(r_list, w_list, e_list, [])
+            fd_r_list, fd_w_list, fd_e_list = select.select(r_list, w_list, e_list, select_timeout)
             if not (fd_r_list or fd_w_list or fd_e_list):
                 continue
             for rs in fd_r_list:
                 if rs is self.rfd:
                     decimg = self.__recieve_frame()
-                    logger.debug('__recieve_frame: %d' %(len(decimg)))
+                    # logger.debug('__recieve_frame: %d' % (len(decimg)))
                     if decimg is None:
                         logger.error('decimg is None')
                         continue
