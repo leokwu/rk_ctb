@@ -21,7 +21,7 @@ class rknn_server:
         if self.wfd < 0:
             logger.error('open write node failed')
             sys.exit(-1)
-    
+     
     def __del__(self):
         # logger.debug('release resource')
         if self.rfd >= 0:
@@ -50,15 +50,16 @@ class rknn_server:
             exit(ret)
         logger.debug('Init done')
         # self.wfd.write(b'ready')
-        # os.write(self.wfd, b'ready')
+        os.write(self.wfd, b'ready')
 
         while True:
             decimg = self.__recieve_frame()
-            # logger.debug('__recieve_frame: %s' %(decimg))
+            logger.debug('__recieve_frame: %d' %(len(decimg)))
             if decimg is None:
                 break
 
             outputs = rknn.inference(inputs=[decimg])
+            logger.debug("outputs: %s" % (outputs))
             data = post_func(outputs)
             self.__send_result(data)
 
@@ -85,7 +86,7 @@ class rknn_server:
         while count:
             # newbuf = self.rfd.read(count)
             newbuf = os.read(self.rfd, count)
-            logger.debug('newbuf: %s' % (newbuf))
+            logger.debug('newbuf: %d' % (len(newbuf)))
             if not newbuf: return None
             buf += newbuf
             count -= len(newbuf)
@@ -122,6 +123,10 @@ class rknn_server:
             ctb_data = ctb_data + tmp
 
         ctb_data = str.encode(str(count).ljust(8)) + len_info.tostring() + ctb_data
-
+        logger.debug("ctb_data: %s" % (len(ctb_data)))
         # self.wfd.write(ctb_data)
+        ctb_data_len = len(ctb_data)
+        os.write(self.wfd, str.encode(str(ctb_data_len)).ljust(16))
         os.write(self.wfd, ctb_data)
+        # os.write(self.wfd, b"111111")
+        logger.debug("write ctb data end")
