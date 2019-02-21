@@ -5,7 +5,7 @@ import math
 import random
 import cv2
 import sys
-from rknn_server_class import rknn_server
+from rknn_server_class import *
 
 model = './ssd_mobilenet_v1_coco.rknn'
 
@@ -140,16 +140,21 @@ def post_process(outputs):
 
         n = candidateBox[0][i]
 
-        xmin = max(0.0, min(1.0, predictions[0][n][1])) * INPUT_SIZE
-        ymin = max(0.0, min(1.0, predictions[0][n][0])) * INPUT_SIZE
-        xmax = max(0.0, min(1.0, predictions[0][n][3])) * INPUT_SIZE
-        ymax = max(0.0, min(1.0, predictions[0][n][2])) * INPUT_SIZE
+        xmin = max(0.0, min(1.0, predictions[0][n][1]))
+        ymin = max(0.0, min(1.0, predictions[0][n][0]))
+        xmax = max(0.0, min(1.0, predictions[0][n][3]))
+        ymax = max(0.0, min(1.0, predictions[0][n][2]))
 
         box = [xmin, ymin, xmax, ymax]
         boxes.append(box)
         classes.append(candidateBox[1][i])
         scores.append(candidateScore[0][i])
-    return np.array(boxes), np.array(classes), np.array(scores)
+    boxes = np.array(boxes).astype(np.float32)
+    classes = np.array(classes).astype(np.int)
+    scores = np.array(scores).astype(np.float32)
+    logger.debug("type boxes: %s classes: %s scoree: %s\n" % (boxes.dtype, classes.dtype, scores.dtype)) 
+    logger.debug("boxes: %s classes: %s scoree: %s\n" % (boxes, classes, scores)) 
+    return boxes, classes, scores
 
 if __name__ == '__main__':
 

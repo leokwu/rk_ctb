@@ -164,8 +164,8 @@ if __name__ == '__main__':
 
     nms_postprocess = time.time()
     print("nms time: ", nms_postprocess - calc_postprocess)
-    print("total postprocess time: ", nms_postprocess - begin_postprocess)
-    print("vaildCnt: %d \n candidateBox: %s \n predictions: %s \n" % (vaildCnt, candidateBox, predictions))
+    # print("total postprocess time: ", nms_postprocess - begin_postprocess)
+    # print("vaildCnt: %d \n candidateBox: %s \n predictions: %s \n" % (vaildCnt, candidateBox, predictions))
     # Draw result
     for i in range(0, vaildCnt):
         if candidateBox[0][i] == -1:
@@ -179,13 +179,15 @@ if __name__ == '__main__':
         ymax = max(0.0, min(1.0, predictions[0][n][2])) * INPUT_SIZE
 
         # print("%d @ (%d, %d) (%d, %d) score=%f" % (topClassScoreIndex, xmin, ymin, xmax, ymax, topClassScore))
-        cv2.rectangle(orig_img, (int(xmin), int(ymin)), (int(xmax), int(ymax)),
-             (random.random()*255, random.random()*255, random.random()*255), 3)
+        # cv2.rectangle(orig_img, (int(xmin), int(ymin)), (int(xmax), int(ymax)),
+             #(random.random()*255, random.random()*255, random.random()*255), 3)
 
-    cv2.imwrite("out.jpg", orig_img)
-
+    # cv2.imwrite("out.jpg", orig_img)
+    draw_postprocess = time.time()
+    print("total postprocess time: ", draw_postprocess - begin_postprocess)
+    
     # Evaluate Perf on Simulator
-    rknn.eval_perf(inputs=[img], is_print=True)
+    # rknn.eval_perf(inputs=[img], is_print=True)
 
     # Release RKNN Context
     rknn.release()

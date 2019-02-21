@@ -8,7 +8,7 @@ Run with sudo permissions
 import cv2
 import numpy as np
 from rknn.api import RKNN
-from rknn_server_class import rknn_server
+from rknn_server_class import *
 from timeit import default_timer as timer
 
 model = './yolov3_tiny.rknn'
