@@ -4,92 +4,86 @@
 
 #include "ctb_device.h"
 
-
 using namespace std;
 
 
 CtbDeviceUnit::CtbDeviceUnit() {
-	
 
-}
-
-CtbDeviceUnit::~CtbDeviceUnit() {
-	
-	
-}
-
-ssize_t CtbDeviceUnit::writeData(const void *buf, size_t len) {
-	
-
-}
-ssize_t CtbDeviceUnit::readData(void *buf, size_t len) {
-	int i, ret, size;
+	mEp[0] = -1;
+	mEp[1] = -1;	
+	int i;
 	char ep_path[32];
-
-	int ep[2];
-
-	fd_set rfds;
-	fd_set wfds;
-
-	void *buf_in, *buf_out;
 	
 	for (i = 0; i < 2; ++i) {
 		sprintf(ep_path, "%s/ep%d", DEVICE_PATH, i+1);
-		ep[i] = open(ep_path, O_RDWR | O_NONBLOCK);
-		if (ep[i] < 0) {
-			printf("unable to open ep%d: %s\n", i+1,
-			       strerror(errno));
-			return 1;
+		mEp[i] = open(ep_path, O_RDWR | O_NONBLOCK);
+		if (mEp[i] < 0) {
+			LOGE("unable to open ep%d: %s\n", i+1,
+					strerror(errno));
+			exit(-1);
 		}
-	}
-	
-	/* alloc buffers and requests */
-	buf_in = malloc(BUF_LEN);
-	buf_out = malloc(BUF_LEN);
-	while (1) {
-		FD_ZERO(&rfds);
-		FD_ZERO(&wfds);
-		FD_SET(ep[0], &rfds);
-		FD_SET(ep[1], &wfds);
-		
-		printf("----1\n");
-		ret = select(((ep[0] > ep[1]) ? ep[0] : ep[1]) + 1,
-				&rfds, &wfds, NULL, NULL);
-		printf("----2\n");
-		if (ret < 0) {
-			if (errno == EINTR)
-				continue;
-			/* customer must deal with error */
-			perror("select");
-			break;
-		}
-		if (FD_ISSET(ep[0], &rfds)) {
-			size = read(ep[0], buf_in, BUF_LEN);
-			printf("read size: %d buf_in: %s\n", size, buf_in);
-		}
-		printf("----3\n");
-#if 0
-		size = read(ep[0], buf_in, BUF_LEN);
-		printf("read size: %d buf_in: %s\n", size, buf_in);
-		// size = write(ep[1], buf_out, BUF_LEN);
-		size = write(ep[1], "1111", 4);
-		printf("write size: %d buf_out: %s\n", size, buf_out);
-#endif
-	}
+	}	
+}
 
-	/* free resources */
-	if (buf_in) {
-		free(buf_in);
-		buf_in = NULL;
-	}
-	if (buf_out) {
-		free(buf_out);
-		buf_out = NULL;
-	}
+CtbDeviceUnit::~CtbDeviceUnit() {
+	int i;
 
 	for (i = 0; i < 2; ++i) {
-		if (ep[i] >= 0)
-			close(ep[i]);
+		if (mEp[i] >= 0)
+			close(mEp[i]);
+	}	
+}
+
+ssize_t CtbDeviceUnit::writeData(void *buf,  size_t len) {
+	size_t i, ret, size;
+	
+	FD_ZERO(&mWfds);
+	FD_SET(mEp[1], &mWfds);
+
+	LOGD("----1-1\n");
+	ret = select(mEp[1] + 1,
+			NULL, &mWfds, NULL, NULL);
+	LOGD("----2-2 select ret: %d mEp[1]: %d\n", ret, mEp[1]);
+	if (ret < 0) {
+		if (errno == EINTR)
+			return 0;
+		/* customer must deal with error */
+		LOGE("write select");
+		exit(-1);
 	}
-	return 0;
+	if (FD_ISSET(mEp[1], &mWfds)) {
+		LOGD("----2-3\n");
+		size = write(mEp[1], buf, len);
+		LOGD("write size: %d buf: %s error: %s\n", size, buf, strerror(errno));
+	}
+	LOGD("----3-3\n");
+
+	return size;
+}
+
+ssize_t CtbDeviceUnit::readData(void *buf, size_t len) {
+	size_t i, ret, size;
+
+	/* alloc buffers and requests */
+	FD_ZERO(&mRfds);
+	FD_SET(mEp[0], &mRfds);
+
+	LOGD("----1\n");
+	ret = select(mEp[0] + 1,
+			&mRfds, NULL, NULL, NULL);
+	LOGD("----2 select ret: %d mEp[0]: %d\n", ret, mEp[0]);
+	if (ret < 0) {
+		if (errno == EINTR)
+			return 0;
+		/* customer must deal with error */
+		LOGE("read select");
+		exit(-1);
+	}
+	if (FD_ISSET(mEp[0], &mRfds)) {
+		size = read(mEp[0], buf, len);
+		LOGD("read size: %d buf: %s error: %s\n", size, buf, strerror(errno));
+	}
+	LOGD("----3\n");
+	
+	return size;
 }
