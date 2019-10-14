@@ -3,9 +3,10 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <algorithm>
+#include "slog.h"
 extern "C"
 {
-#include <libusb.h>
+#include <libusb-1.0/libusb.h>
 }
 
 #define USB_MAX_PAYLOAD (1024 * 1024)
