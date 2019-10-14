@@ -10,8 +10,30 @@ extern "C"
 
 #define USB_MAX_PAYLOAD (1024 * 1024)
 
-uint8_t g_buf[1024 * 1024];
-//uint8_t g_buf[16 * 1024 * 1024];
+
+#define BUF_LEN         1024 * 1024
+
+uint8_t mBulkReadBuffer[BUF_LEN];
+uint8_t mBulkWriteBuffer[BUF_LEN];
+
+
+struct CTB_PACKET_READ {
+        uint32_t pkt_head;              // pkt head
+        uint32_t pkt_length;            // pkt size (with self)
+        uint32_t pkt_type;              // read
+        uint8_t  pkt_session[8];        // is it the same interaction
+        uint8_t  pkt_data[];            // data
+};
+
+
+struct CTB_PACKET_WRITE {
+        uint32_t pkt_head;              // pkt head
+        uint32_t pkt_length;            // pkt size (with self)
+        uint32_t pkt_type;              // write
+        uint8_t  pkt_session[8];        // is it the same interaction
+        uint8_t  pkt_data[];            // data
+};
+
 
 int usbRead(libusb_device_handle *handle, uint8_t addr, void *data, int len)
 {
@@ -25,7 +47,8 @@ int usbRead(libusb_device_handle *handle, uint8_t addr, void *data, int len)
         if (ret == LIBUSB_ERROR_TIMEOUT)
         {
             printf("read time out \n");
-            continue;
+            return 0;
+            // continue;
         }
         else if (ret < 0)
         {
@@ -49,8 +72,9 @@ int usbWrite(libusb_device_handle *handle, uint8_t addr, const void *data, int l
         int ret = libusb_bulk_transfer(handle, addr, (unsigned char *)buf, write_len, &n, 500);
         if (ret == LIBUSB_ERROR_TIMEOUT)
         {
-            printf("send timeout \n");
-            continue;
+            printf("write timeout \n");
+            return 0;
+            // continue;
         }
         else if (ret < 0)
         {
@@ -130,24 +154,22 @@ int main(int argc, char **argv)
     if (libusb_claim_interface(handle, interface_num) < 0)
         return -1;
     printf("interface_num = %d, addr_in = %x, addr_out = %d\n", interface_num, addr_in, addr_out);
-    uint32_t packet[256];
+    // uint32_t packet[256];
     while (true)
     {
-        packet[0] = 0x444E4553;
-        packet[2] = 0xCAFFE;
-        packet[3] = sizeof(g_buf);
-        packet[5] = 0xbbb1baac;
-        printf("send size = %d\n", (int)sizeof(g_buf));
-//        if (usbWrite(handle, addr_out, packet, sizeof(packet)) < 0)
-//            return -1;
-//        if (usbWrite(handle, addr_out, g_buf, sizeof(g_buf)) < 0)
-        if (usbWrite(handle, addr_out, g_buf, sizeof(g_buf)) < 0)
+        mBulkWriteBuffer[0] = 0x44;
+        mBulkWriteBuffer[4] = 0x18;
+        mBulkWriteBuffer[8] = 0x1;
+        mBulkWriteBuffer[12] = 0xaa;
+        mBulkWriteBuffer[20] = 0x11;
+
+        printf("write size = %ld\n", sizeof(mBulkWriteBuffer));
+        if (usbWrite(handle, addr_out, mBulkWriteBuffer, sizeof(mBulkWriteBuffer)) < 0)
             return -1;
-        printf("recv size = %d\n", (int)sizeof(g_buf));
-//        if (usbRead(handle, addr_in, packet, sizeof(packet)) < 0)
-//            return -1;
-//        if (usbRead(handle, addr_in, g_buf, sizeof(g_buf)) < 0)
-        if (usbRead(handle, addr_in, g_buf, 4) < 0)
+
+        printf("read size = %ld\n", sizeof(mBulkReadBuffer));
+
+        if (usbRead(handle, addr_in, mBulkReadBuffer, sizeof(mBulkReadBuffer)) < 0)
             return -1;
     }
     return 0;
