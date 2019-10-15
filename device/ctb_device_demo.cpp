@@ -12,8 +12,6 @@ int main(int argc, char *argv[])
 	ctb_device.mBulkWriteBuffer[12] = 0xbb;
 	ctb_device.mBulkWriteBuffer[20] = 0x22;
 
-	unsigned length;
-
 	while (1) {
 		ret = ctb_device.readData(ctb_device.mBulkReadBuffer, sizeof(ctb_device.mBulkReadBuffer));		
 		auto read_data = (CTB_PACKET_READ *) ctb_device.mBulkReadBuffer;

@@ -20,6 +20,7 @@
 #include <unistd.h>
 #include <stdbool.h>
 #include <sys/eventfd.h>
+#include <rockchip/rknn_api.h>
 
 #include "slog.h"
 
