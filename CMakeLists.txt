@@ -32,7 +32,7 @@ if (ENABLE_DEVICE)
 			${CMAKE_CURRENT_SOURCE_DIR}/device/ctb_device.cpp
 			${CMAKE_CURRENT_SOURCE_DIR}/utils/slog.cpp)
 	add_executable(${DEVICE_NAME} ${DEVICE_SRCS})
-	target_link_libraries(${DEVICE_NAME} rknn_api dl)
+	target_link_libraries(${DEVICE_NAME} dl)
 endif(ENABLE_DEVICE)
 
 if (ENABLE_HOST)
