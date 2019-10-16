@@ -37,7 +37,7 @@ endif(ENABLE_DEVICE)
 
 if (ENABLE_HOST)
 	set (HOST_NAME "ctb_host_demo")
-	set (HOST_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/host/test_unique_device2.cpp
+	set (HOST_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/host/ctb_host.cpp
 			${CMAKE_CURRENT_SOURCE_DIR}/utils/slog.cpp)
 	add_executable(${HOST_NAME} ${HOST_SRCS})
 	target_link_libraries(${HOST_NAME} usb-1.0)
