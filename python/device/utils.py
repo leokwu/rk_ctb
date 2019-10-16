@@ -18,11 +18,18 @@ class CtbDevice():
 
         print("init succeed")
 
-    def ctb_read(self):
+    def ctb_read(self, len):
         print("read")
+        read_data = os.read(self.rfd, len)
+        print("read_data: %s\n", read_data)
 
-    def ctb_write(self):
+        return read_data
+
+    def ctb_write(self, write_data):
         print("write")
+        write_len = os.write(self.wfd, write_data)
+        print("the numbler of bytes: %d\n", write_len)
+        return write_len
 
     def ctb_release(self):
         print("release resource")
