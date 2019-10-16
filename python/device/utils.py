@@ -23,3 +23,12 @@ class CtbDevice():
 
     def ctb_write(self):
         print("write")
+
+    def ctb_release(self):
+        print("release resource")
+        if self.rfd < 0:
+            print("open read node failed")
+            os.close(self.rfd)
+        if self.wfd < 0:
+            print("open read node failed")
+            os.close(self.wfd)
