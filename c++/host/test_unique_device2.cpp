@@ -172,6 +172,8 @@ int main(int argc, char **argv)
 
         if (usbRead(handle, addr_in, mBulkReadBuffer, sizeof(mBulkReadBuffer)) < 0)
             return -1;
+        auto read_data = (CTB_PACKET_READ *) mBulkReadBuffer;
+        DUMPDATA(mBulkReadBuffer, read_data->pkt_length);
     }
     return 0;
 }
