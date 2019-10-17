@@ -2,40 +2,57 @@
 
 import select
 import os, sys
+from log import *
 
+
+logger = InitLog("ctb_device", "ctb_device.log")
 
 class CtbDevice():
     def __init__(self):
-        print("init")
+
+        logger.debug("init")
+
         rfd = os.open("./read.log", os.O_RDWR | os.O_NONBLOCK)
         if rfd < 0:
-            print("open read node failed")
+            logger.error("open read node failed")
             sys.exit(-1)
         wfd = os.open("./write.log", os.O_RDWR | os.O_NONBLOCK)
         if wfd < 0:
-            print("open read node failed")
+            logger.error("open read node failed")
             sys.exit(-1)
 
-        print("init succeed")
+        try:
+            epoll_rfd = select.epoll()
+            epoll_rfd.register(rfd, select.EPOLLIN)
+        except select.error as error_rmsg:
+            logger.error("error_rmsg rfd: \n", error_rmsg)
+
+        try:
+            epoll_wfd = select.epoll()
+            epoll_wfd.register(wfd, select.EPOLLOUT)
+        except select.error as error_wmsg:
+            logger.error("error_wmsg rfd: \n", error_wmsg)
+
+        logger.debug("init succeed")
 
     def ctb_read(self, len):
-        print("read")
+        logger.debug("read")
         read_data = os.read(self.rfd, len)
-        print("read_data: %s\n", read_data)
+        logger.debug("read_data: \n", read_data)
 
         return read_data
 
     def ctb_write(self, write_data):
-        print("write")
+        logger.debug("write")
         write_len = os.write(self.wfd, write_data)
-        print("the numbler of bytes: %d\n", write_len)
+        logger.debug("the numbler of bytes: \n", write_len)
         return write_len
 
     def ctb_release(self):
-        print("release resource")
+        logger.debug("release resource")
         if self.rfd < 0:
-            print("open read node failed")
+            logger.error("open read node failed")
             os.close(self.rfd)
         if self.wfd < 0:
-            print("open read node failed")
+            logger.error("open read node failed")
             os.close(self.wfd)
