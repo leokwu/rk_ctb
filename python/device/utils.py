@@ -12,11 +12,11 @@ class CtbDevice():
 
         logger.debug("init")
 
-        rfd = os.open("./read.log", os.O_RDWR | os.O_NONBLOCK)
+        rfd = os.open("/dev/usb-ffs/ctb/ep1", os.O_RDWR | os.O_NONBLOCK)
         if rfd < 0:
             logger.error("open read node failed")
             sys.exit(-1)
-        wfd = os.open("./write.log", os.O_RDWR | os.O_NONBLOCK)
+        wfd = os.open("/dev/usb-ffs/ctb/ep2", os.O_RDWR | os.O_NONBLOCK)
         if wfd < 0:
             logger.error("open read node failed")
             sys.exit(-1)
