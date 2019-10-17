@@ -54,9 +54,9 @@ class CtbDevice():
 
     def ctb_release(self):
         logger.debug("release resource")
-        if self.rfd < 0:
-            logger.error("open read node failed")
+        if self.rfd >= 0:
+            logger.debug("release rfd")
             os.close(self.rfd)
-        if self.wfd < 0:
-            logger.error("open read node failed")
+        if self.wfd >= 0:
+            logger.debug("release wfd")
             os.close(self.wfd)
