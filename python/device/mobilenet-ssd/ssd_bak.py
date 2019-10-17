@@ -4,12 +4,8 @@ import re
 import math
 import random
 import cv2
-import sys
+
 from rknn.api import RKNN
-
-sys.path.append("..")
-from utils import *
-
 
 INPUT_SIZE = 300
 
@@ -84,13 +80,7 @@ if __name__ == '__main__':
     outputs = rknn.inference(inputs=[img])
     print('done')
     print('inference result: ', outputs)
-    
-    ctb_device = CtbDevice()
-    logger.debug("main ")
-    length = ctb_device.ctb_write((outputs).encode(), len((outputs).encode()))
-    logger.debug("write length: %s" % (length))
 
-    '''
     predictions = outputs[0].reshape((1, NUM_RESULTS, 4))
     outputClasses = outputs[1].reshape((1, NUM_RESULTS, NUM_CLASSES))
     candidateBox = np.zeros([2, NUM_RESULTS], dtype=int)
@@ -189,5 +179,4 @@ if __name__ == '__main__':
     rknn.eval_perf(inputs=[img], is_print=True)
 
     # Release RKNN Context
-    '''
     rknn.release()
