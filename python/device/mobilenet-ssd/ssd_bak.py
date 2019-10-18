@@ -4,6 +4,7 @@ import re
 import math
 import random
 import cv2
+import time
 
 from rknn.api import RKNN
 
@@ -17,9 +18,9 @@ X_SCALE = 10.0
 H_SCALE = 5.0
 W_SCALE = 5.0
 
-
 def expit(x):
     return 1. / (1. + math.exp(-x))
+    # return 1. / (1. + np.exp(-x))
 
 def unexpit(y):
     return -1.0 * math.log((1.0 / y) - 1.0);
@@ -77,7 +78,10 @@ if __name__ == '__main__':
 
     # Inference
     print('--> Running model')
+    begin_inference = time.time()
     outputs = rknn.inference(inputs=[img])
+    end_inference = time.time()
+    print("inference time: ", end_inference - begin_inference)
     print('done')
     print('inference result: ', outputs)
 
@@ -88,6 +92,7 @@ if __name__ == '__main__':
 
     box_priors = load_box_priors()
 
+    begin_postprocess = time.time()
     # Post Process
     # got valid candidate box
     for i in range(0, NUM_RESULTS):
@@ -106,7 +111,8 @@ if __name__ == '__main__':
             candidateBox[0][vaildCnt] = i
             candidateBox[1][vaildCnt] = topClassScoreIndex
             vaildCnt += 1
-
+    valid_postprocess = time.time()
+    print("valid time: ", valid_postprocess - begin_postprocess)
     # calc position
     for i in range(0, vaildCnt):
         if candidateBox[0][i] == -1:
@@ -127,7 +133,8 @@ if __name__ == '__main__':
         predictions[0][n][1] = xmin
         predictions[0][n][2] = ymax
         predictions[0][n][3] = xmax
- 
+    calc_postprocess = time.time()
+    print("calc time: ", calc_postprocess - valid_postprocess)
     # NMS
     for i in range(0, vaildCnt):
         if candidateBox[0][i] == -1:
@@ -155,8 +162,10 @@ if __name__ == '__main__':
             if iou >= 0.45:
                 candidateBox[0][j] = -1
 
-
-
+    nms_postprocess = time.time()
+    print("nms time: ", nms_postprocess - calc_postprocess)
+    print("total postprocess time: ", nms_postprocess - begin_postprocess)
+    print("vaildCnt: %d \n candidateBox: %s \n predictions: %s \n" % (vaildCnt, candidateBox, predictions))
     # Draw result
     for i in range(0, vaildCnt):
         if candidateBox[0][i] == -1:
