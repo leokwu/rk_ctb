@@ -6,6 +6,7 @@ import random
 import cv2
 import sys
 from rknn.api import RKNN
+import ctypes
 
 sys.path.append("..")
 from utils import *
@@ -83,11 +84,11 @@ if __name__ == '__main__':
     print('--> Running model')
     outputs = rknn.inference(inputs=[img])
     print('done')
-    print('inference result: ', outputs)
-    
+    print('inference result: %s %d' % (outputs, len(outputs)))
+
     ctb_device = CtbDevice()
-    logger.debug("main ")
-    length = ctb_device.ctb_write((outputs).encode(), len((outputs).encode()))
+    arr = (ctypes.c_float * len(outputs))(* outputs)
+    length = ctb_device.ctb_write(arr, len(arr))
     logger.debug("write length: %s" % (length))
 
     '''
