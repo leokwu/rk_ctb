@@ -37,7 +37,8 @@ class CtbDevice():
 
     def ctb_read(self, length):
         logger.debug("read")
-        data = os.read(self.rfd, length)
+        # data = os.read(self.rfd, length)
+        data = self.rfd.read(length)
         logger.debug("read data: %s" % (data))
 
         return data

@@ -5,11 +5,9 @@ import math
 import random
 import cv2
 import sys
-from rknn.api import RKNN
-import ctypes
 
-sys.path.append("..")
-from utils import *
+model = './ssd_mobilenet_v1_coco.rknn'
+
 
 
 INPUT_SIZE = 300
@@ -58,40 +56,7 @@ def load_box_priors():
     return box_priors
 
 
-
-if __name__ == '__main__':
-
-    # Create RKNN object
-    rknn = RKNN()
-    
-    # Direct Load RKNN Model
-    rknn.load_rknn('./ssd_mobilenet_v1_coco.rknn')
-
-    # Set inputs
-    orig_img = cv2.imread('./road.bmp')
-    img = cv2.cvtColor(orig_img, cv2.COLOR_BGR2RGB)
-    img = cv2.resize(img, (INPUT_SIZE, INPUT_SIZE), interpolation=cv2.INTER_CUBIC)
-
-    # init runtime environment
-    print('--> Init runtime environment')
-    ret = rknn.init_runtime()
-    if ret != 0:
-        print('Init runtime environment failed')
-        exit(ret)
-    print('done')
-
-    # Inference
-    print('--> Running model')
-    outputs = rknn.inference(inputs=[img])
-    print('done')
-    print('inference result: %s %d' % (outputs, len(outputs)))
-
-    ctb_device = CtbDevice()
-    arr = (ctypes.c_float * len(outputs))(* outputs)
-    length = ctb_device.ctb_write(arr, len(arr))
-    logger.debug("write length: %s" % (length))
-
-    '''
+def post_process(outputs):
     predictions = outputs[0].reshape((1, NUM_RESULTS, 4))
     outputClasses = outputs[1].reshape((1, NUM_RESULTS, NUM_CLASSES))
     candidateBox = np.zeros([2, NUM_RESULTS], dtype=int)
@@ -138,7 +103,7 @@ if __name__ == '__main__':
         predictions[0][n][1] = xmin
         predictions[0][n][2] = ymax
         predictions[0][n][3] = xmax
- 
+
     # NMS
     for i in range(0, vaildCnt):
         if candidateBox[0][i] == -1:
@@ -150,7 +115,7 @@ if __name__ == '__main__':
         xmax0 = predictions[0][n][3]
         ymax0 = predictions[0][n][2]
 
-        for j in range(i+1, vaildCnt):
+        for j in range(i + 1, vaildCnt):
             m = candidateBox[0][j]
 
             if m == -1:
@@ -165,30 +130,10 @@ if __name__ == '__main__':
 
             if iou >= 0.45:
                 candidateBox[0][j] = -1
+    return vaildCnt, candidateBox, predictions
 
+if __name__ == '__main__':
 
+    rknn = rknn_server()
+    rknn.service(model, post_process)
 
-    # Draw result
-    for i in range(0, vaildCnt):
-        if candidateBox[0][i] == -1:
-            continue
-
-        n = candidateBox[0][i]
-
-        xmin = max(0.0, min(1.0, predictions[0][n][1])) * INPUT_SIZE
-        ymin = max(0.0, min(1.0, predictions[0][n][0])) * INPUT_SIZE
-        xmax = max(0.0, min(1.0, predictions[0][n][3])) * INPUT_SIZE
-        ymax = max(0.0, min(1.0, predictions[0][n][2])) * INPUT_SIZE
-
-        # print("%d @ (%d, %d) (%d, %d) score=%f" % (topClassScoreIndex, xmin, ymin, xmax, ymax, topClassScore))
-        cv2.rectangle(orig_img, (int(xmin), int(ymin)), (int(xmax), int(ymax)),
-             (random.random()*255, random.random()*255, random.random()*255), 3)
-
-    cv2.imwrite("out.jpg", orig_img)
-
-    # Evaluate Perf on Simulator
-    rknn.eval_perf(inputs=[img], is_print=True)
-
-    # Release RKNN Context
-    '''
-    rknn.release()
