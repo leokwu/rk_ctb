@@ -32,10 +32,9 @@ class rknn_server:
             os.close(self.wfd)
 
     def service(self, model, post_func):
-        while True:
-            t = threading.Thread(target=self.__deal, args=(model, post_func))
-            t.start()
-        return 0
+        t = threading.Thread(target=self.__deal, args=(model, post_func))
+        t.start()
+
 
     def __deal(self, model, post_func):
 
