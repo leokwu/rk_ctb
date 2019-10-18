@@ -10,7 +10,7 @@ logger = InitLog("ctb_device", "ctb_device.log")
 
 
 class rknn_server:
-    def __init__(self, port):
+    def __init__(self):
         logger.debug("init")
 
         self.rfd = os.open("/dev/usb-ffs/ctb/ep1", os.O_RDWR | os.O_NONBLOCK)
