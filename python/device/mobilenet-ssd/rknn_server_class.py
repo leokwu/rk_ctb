@@ -15,22 +15,22 @@ class rknn_server:
 
         self.rfd = os.open("/dev/usb-ffs/ctb/ep1", os.O_RDWR | os.O_NONBLOCK)
         if self.rfd < 0:
-            logger.error("open read node failed")
+            logger.error('open read node failed')
             sys.exit(-1)
         self.wfd = os.open("/dev/usb-ffs/ctb/ep2", os.O_RDWR | os.O_NONBLOCK)
         if self.wfd < 0:
-            logger.error("open read node failed")
+            logger.error('open write node failed')
             sys.exit(-1)
-
+    
     def __del__(self):
-        logger.debug("release resource")
+        # logger.debug('release resource')
         if self.rfd >= 0:
-            logger.debug("release rfd")
+            # logger.debug('release rfd')
             os.close(self.rfd)
         if self.wfd >= 0:
-            logger.debug("release wfd")
+            # logger.debug('release wfd')
             os.close(self.wfd)
-
+    
     def service(self, model, post_func):
         t = threading.Thread(target=self.__deal, args=(model, post_func))
         t.start()
@@ -46,15 +46,15 @@ class rknn_server:
         logger.debug('--> Init runtime environment')
         ret = rknn.init_runtime()
         if ret != 0:
-            logger.debug('Init runtime environment failed')
+            logger.error('Init runtime environment failed')
             exit(ret)
-        logger.debug('done')
+        logger.debug('Init done')
         # self.wfd.write(b'ready')
-        os.write(self.wfd, b'ready')
+        # os.write(self.wfd, b'ready')
 
         while True:
             decimg = self.__recieve_frame()
-            logger.debug("__recieve_frame: %s" % (decimg))
+            # logger.debug('__recieve_frame: %s' %(decimg))
             if decimg is None:
                 break
 
@@ -64,16 +64,17 @@ class rknn_server:
 
 
         # self.wfd.close()
-        os.close(self.wfd)
+        # os.close(self.wfd)
         rknn.release()
-        logger.debug("__deal finish")
+        logger.debug('__deal finish')
 
     def __recieve_frame(self):
         try:
             length = self.__recvall(16)
+            logger.debug('length: %s' % (length))
             stringData = self.__recvall(int(length))
             data = np.frombuffer(stringData, np.uint8)
-            decimg=cv.imdecode(data, cv.IMREAD_COLOR)
+            decimg = cv.imdecode(data, cv.IMREAD_COLOR)
         except (RuntimeError, TypeError, NameError):
             return None
 
@@ -84,6 +85,7 @@ class rknn_server:
         while count:
             # newbuf = self.rfd.read(count)
             newbuf = os.read(self.rfd, count)
+            logger.debug('newbuf: %s' % (newbuf))
             if not newbuf: return None
             buf += newbuf
             count -= len(newbuf)
