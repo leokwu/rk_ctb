@@ -32,10 +32,9 @@ class rknn_server:
             os.close(self.wfd)
 
     def service(self, model, post_func):
-        while True:
-            t = threading.Thread(target=self.__deal, args=(model, post_func))
-            t.start()
-        return 0
+        t = threading.Thread(target=self.__deal, args=(model, post_func))
+        t.start()
+
 
     def __deal(self, model, post_func):
 
@@ -55,6 +54,7 @@ class rknn_server:
 
         while True:
             decimg = self.__recieve_frame()
+            logger.debug("__recieve_frame: %s" % (decimg))
             if decimg is None:
                 break
 
@@ -69,11 +69,11 @@ class rknn_server:
         logger.debug("__deal finish")
 
     def __recieve_frame(self):
-        try :
+        try:
             length = self.__recvall(16)
             stringData = self.__recvall(int(length))
             data = np.frombuffer(stringData, np.uint8)
-            decimg=cv.imdecode(data,cv.IMREAD_COLOR)
+            decimg=cv.imdecode(data, cv.IMREAD_COLOR)
         except (RuntimeError, TypeError, NameError):
             return None
 

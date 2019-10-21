@@ -54,6 +54,7 @@ class rknn_server:
 
         while True:
             decimg = self.__recieve_frame()
+            logger.debug("__recieve_frame: %s" % (decimg))
             if decimg is None:
                 break
 
@@ -68,11 +69,11 @@ class rknn_server:
         logger.debug("__deal finish")
 
     def __recieve_frame(self):
-        try :
+        try:
             length = self.__recvall(16)
             stringData = self.__recvall(int(length))
             data = np.frombuffer(stringData, np.uint8)
-            decimg=cv.imdecode(data,cv.IMREAD_COLOR)
+            decimg=cv.imdecode(data, cv.IMREAD_COLOR)
         except (RuntimeError, TypeError, NameError):
             return None
 
