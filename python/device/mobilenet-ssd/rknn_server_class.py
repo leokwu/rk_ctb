@@ -21,14 +21,11 @@ class rknn_server:
         if self.wfd < 0:
             logger.error('open write node failed')
             sys.exit(-1)
-    
+     
     def __del__(self):
-        # logger.debug('release resource')
         if self.rfd >= 0:
-            # logger.debug('release rfd')
             os.close(self.rfd)
         if self.wfd >= 0:
-            # logger.debug('release wfd')
             os.close(self.wfd)
     
     def service(self, model, post_func):
@@ -37,7 +34,6 @@ class rknn_server:
 
 
     def __deal(self, model, post_func):
-
 
         rknn = RKNN()
         ret = rknn.load_rknn(path=model)
@@ -50,18 +46,18 @@ class rknn_server:
             exit(ret)
         logger.debug('Init done')
         # self.wfd.write(b'ready')
-        # os.write(self.wfd, b'ready')
+        os.write(self.wfd, b'ready')
 
         while True:
             decimg = self.__recieve_frame()
-            # logger.debug('__recieve_frame: %s' %(decimg))
+            logger.debug('__recieve_frame: %d' %(len(decimg)))
             if decimg is None:
-                break
-
+                logger.error("decimg is None")
+                continue
             outputs = rknn.inference(inputs=[decimg])
+            logger.debug("outputs: %s" % (outputs))
             data = post_func(outputs)
             self.__send_result(data)
-
 
         # self.wfd.close()
         # os.close(self.wfd)
@@ -83,31 +79,31 @@ class rknn_server:
     def __recvall(self, count):
         buf = b''
         while count:
-            # newbuf = self.rfd.read(count)
-            newbuf = os.read(self.rfd, count)
-            logger.debug('newbuf: %s' % (newbuf))
-            if not newbuf: return None
-            buf += newbuf
-            count -= len(newbuf)
+            # temp_buf = self.rfd.read(count)
+            temp_buf = os.read(self.rfd, count)
+            logger.debug('temp_buf: %d' % (len(temp_buf)))
+            if not temp_buf: return None
+            buf += temp_buf
+            count -= len(temp_buf)
         return buf
 
     def __pack_np(self, data):
         len_dt = np.dtype(np.int32)
-        stringData = ""
+        string_data = ""
 
         if data is None:
             type_name = "None".ljust(8)
-            stringData = type_name.encode()
+            string_data = type_name.encode()
         else:
             type_name = str(data.dtype).ljust(8)
             shape_len = len(data.shape) * len_dt.itemsize
             shape = np.array(data.shape, dtype=len_dt)
-            data_len = data.size*data.itemsize
-            stringData = type_name.encode() + \
+            data_len = data.size * data.itemsize
+            string_data = type_name.encode() + \
                          str.encode(str(shape_len).ljust(8)) + str.encode(str(data_len).ljust(8))
-            stringData = stringData + shape.tostring() + data.tostring()
+            string_data = string_data + shape.tostring() + data.tostring()
 
-        return stringData
+        return string_data
             
     def __send_result(self, result):
         count = len(result)
@@ -122,6 +118,10 @@ class rknn_server:
             ctb_data = ctb_data + tmp
 
         ctb_data = str.encode(str(count).ljust(8)) + len_info.tostring() + ctb_data
-
+        logger.debug("ctb_data len: %s" % (len(ctb_data)))
         # self.wfd.write(ctb_data)
+        ctb_data_len = len(ctb_data)
+        os.write(self.wfd, str.encode(str(ctb_data_len)).ljust(16))
         os.write(self.wfd, ctb_data)
+        # os.write(self.wfd, b"111111")
+        logger.debug("write ctb data end")
