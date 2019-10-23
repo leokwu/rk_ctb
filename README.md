@@ -1,7 +1,8 @@
-#<center>**计算棒数据透传指南**</center>
+<center>**计算棒数据透传指南**</center>
 ---
 
-##准备
+准备
+
 	- **系统环境**
 	
 		1. 切换到root用户
@@ -10,7 +11,7 @@
 		3. 安装rknn-toolkit 1808 python版本
 			pip3 install rknn_toolkit-0.9.8.1-cp36-cp36m-linux_aarch64.whl
 
-###python
+python
    
    - **yolov3**
    
@@ -23,8 +24,6 @@
 			python3 ssd_server.py
 
 
-   
-
-###c++  
+c++  
 
    - **当前只实现host端和device端通信**
