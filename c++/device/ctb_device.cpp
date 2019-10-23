@@ -36,7 +36,10 @@ CtbDeviceUnit::~CtbDeviceUnit() {
 
 ssize_t CtbDeviceUnit::writeData(void *buf,  size_t len) {
 	size_t i, ret, size;
-	
+	ssize_t write_bytes = 0;
+	size_t write_len = 0;
+
+
 	FD_ZERO(&mWfds);
 	FD_SET(mEp[1], &mWfds);
 
@@ -52,17 +55,29 @@ ssize_t CtbDeviceUnit::writeData(void *buf,  size_t len) {
 		exit(-1);
 	}
 	if (FD_ISSET(mEp[1], &mWfds)) {
-		LOGD("----2-3\n");
-		size = write(mEp[1], buf, len);
+
+
+
+		while (write_len < len) {
+			if ((write_bytes = write(mEp[1], buf + write_len,
+								   len - write_len)) == -1) {
+				LOGE("write error: %s\n", strerror(errno));
+				goto exit;
+			}
+			write_len += write_bytes;
+		}
 		LOGD("write size: %d buf: %s error: %s\n", size, buf, strerror(errno));
 	}
 	LOGD("----3-3\n");
 
-	return size;
+exit:
+	return write_len;
 }
 
 ssize_t CtbDeviceUnit::readData(void *buf, size_t len) {
 	size_t i, ret, size;
+	ssize_t read_bytes = 0;
+	size_t read_len = 0;
 
 	/* alloc buffers and requests */
 	FD_ZERO(&mRfds);
@@ -80,10 +95,20 @@ ssize_t CtbDeviceUnit::readData(void *buf, size_t len) {
 		exit(-1);
 	}
 	if (FD_ISSET(mEp[0], &mRfds)) {
-		size = read(mEp[0], buf, len);
+
+
+		while (read_len < len) {
+			if ((read_bytes = read(mEp[0], buf + read_len,
+								   len - read_len)) == -1) {
+				LOGE("read error: %s\n", strerror(errno));
+				goto exit;
+			}
+			read_len += read_bytes;
+		}
 		LOGD("read size: %d buf: %s error: %s\n", size, buf, strerror(errno));
 	}
 	LOGD("----3\n");
-	
-	return size;
+
+exit:
+	return read_len;
 }

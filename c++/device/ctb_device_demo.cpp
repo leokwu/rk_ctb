@@ -12,12 +12,6 @@ int main(int argc, char *argv[])
 	int i, ret, size;
 
 
-	ret = load_model(MODEL_PATH, 0);
-	if (ret) {
-		LOGE("load model error\n");
-		goto exit;
-	}
-
 	ctb_device.mBulkWriteBuffer[0] = 0x55;
 	ctb_device.mBulkWriteBuffer[4] = 0x18;
 	ctb_device.mBulkWriteBuffer[8] = 0x2;
