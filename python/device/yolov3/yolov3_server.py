@@ -1,3 +1,10 @@
+'''
+USAGE:
+python3.6 yolov3_server.py 
+
+Run with sudo permissions
+ 
+'''
 import cv2
 import numpy as np
 from rknn.api import RKNN
