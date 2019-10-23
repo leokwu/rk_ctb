@@ -164,6 +164,7 @@ def yolov3_post_process(input_data):
 	classes = np.concatenate(nclasses)
 	scores = np.concatenate(nscores)
 
+	logger.debug('boxes: %s classes: %s scores: %s' % (boxes, classes, scores))
 	return boxes, classes, scores
 
 def post_process(output):
