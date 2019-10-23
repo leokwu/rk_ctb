@@ -61,6 +61,7 @@ def post_process(outputs):
     predictions = outputs[0].reshape((1, NUM_RESULTS, 4))
     outputClasses = outputs[1].reshape((1, NUM_RESULTS, NUM_CLASSES))
     candidateBox = np.zeros([2, NUM_RESULTS], dtype=int)
+    candidateScore = np.zeros([1, NUM_RESULTS], dtype=float)
     vaildCnt = 0
 
     box_priors = load_box_priors()
@@ -82,6 +83,7 @@ def post_process(outputs):
         if topClassScore > 0.4:
             candidateBox[0][vaildCnt] = i
             candidateBox[1][vaildCnt] = topClassScoreIndex
+            candidateScore[0][vaildCnt] = topClassScore
             vaildCnt += 1
 
     # calc position
@@ -131,7 +133,23 @@ def post_process(outputs):
 
             if iou >= 0.45:
                 candidateBox[0][j] = -1
-    return np.array(vaildCnt), candidateBox, predictions
+    boxes, classes, scores = [], [], []
+    for i in range(0, vaildCnt):
+        if candidateBox[0][i] == -1:
+            continue
+
+        n = candidateBox[0][i]
+
+        xmin = max(0.0, min(1.0, predictions[0][n][1])) * INPUT_SIZE
+        ymin = max(0.0, min(1.0, predictions[0][n][0])) * INPUT_SIZE
+        xmax = max(0.0, min(1.0, predictions[0][n][3])) * INPUT_SIZE
+        ymax = max(0.0, min(1.0, predictions[0][n][2])) * INPUT_SIZE
+
+        box = [xmin, ymin, xmax, ymax]
+        boxes.append(box)
+        classes.append(candidateBox[1][i])
+        scores.append(candidateScore[0][i])
+    return np.array(boxes), np.array(classes), np.array(scores)
 
 if __name__ == '__main__':
 
