@@ -1,26 +1,35 @@
 import numpy as np
 import threading
 import cv2 as cv
-from rknn.api import RKNN
+import select
 import os, sys
+
 from log import *
+from rknn.api import RKNN
 
 logger = InitLog("ctb_device", "ctb_device.log")
-
+select_timeout = 0.5
 
 
 class rknn_server:
     def __init__(self):
-        logger.debug("init")
+        logger.debug("Init")
+        self.rfd = -1
+        self.wfd = -1
 
-        self.rfd = os.open("/dev/usb-ffs/ctb/ep1", os.O_RDWR | os.O_NONBLOCK)
-        if self.rfd < 0:
-            logger.error('open read node failed')
-            sys.exit(-1)
-        self.wfd = os.open("/dev/usb-ffs/ctb/ep2", os.O_RDWR | os.O_NONBLOCK)
-        if self.wfd < 0:
-            logger.error('open write node failed')
-            sys.exit(-1)
+        while True:
+            self.rfd = os.open("/dev/usb-ffs/ctb/ep1", os.O_RDWR | os.O_NONBLOCK)
+            if self.rfd < 0:
+                logger.error('open read node failed, retry')
+                continue
+
+            while True:
+                self.wfd = os.open("/dev/usb-ffs/ctb/ep2", os.O_RDWR | os.O_NONBLOCK)
+                if self.wfd < 0:
+                    logger.error('open write node failed, retry')
+                    continue
+                break
+            break
      
     def __del__(self):
         if self.rfd >= 0:
@@ -29,9 +38,11 @@ class rknn_server:
             os.close(self.wfd)
     
     def service(self, model, post_func):
-        t = threading.Thread(target=self.__deal, args=(model, post_func))
-        t.start()
-
+        while True:
+            if self.wfd >= 0 and self.rfd >= 0:
+                t = threading.Thread(target=self.__deal, args=(model, post_func))
+                t.start()
+                break
 
     def __deal(self, model, post_func):
 
@@ -45,33 +56,49 @@ class rknn_server:
             logger.error('Init runtime environment failed')
             exit(ret)
         logger.debug('Init done')
-        # self.wfd.write(b'ready')
-        os.write(self.wfd, b'ready')
+
+        r_list = [self.rfd]
+        w_list = [self.wfd]
+        e_list = [self.rfd, self.wfd]
 
         while True:
-            decimg = self.__recieve_frame()
-            logger.debug('__recieve_frame: %d' %(len(decimg)))
-            if decimg is None:
-                logger.error("decimg is None")
+            fd_r_list, fd_w_list, fd_e_list = select.select(r_list, w_list, e_list, select_timeout)
+            if not (fd_r_list or fd_w_list or fd_e_list):
                 continue
-            outputs = rknn.inference(inputs=[decimg])
-            logger.debug("outputs: %s" % (outputs))
-            data = post_func(outputs)
-            self.__send_result(data)
+            for rs in fd_r_list:
+                if rs is self.rfd:
+                    decimg = self.__recieve_frame()
+                    # logger.debug('__recieve_frame: %d' % (len(decimg)))
+                    if decimg is None:
+                        logger.error('decimg is None')
+                        continue
+                    outputs = rknn.inference(inputs=[decimg])
+                    logger.debug("outputs: %s" % (outputs))
+                    data = post_func(outputs)
+                    for ws in fd_w_list:
+                        if ws is self.wfd:
+                            self.__send_result(data)
+            for es in fd_e_list:
+                logger.error("error fd list: %s" % (es))
 
-        # self.wfd.close()
-        # os.close(self.wfd)
         rknn.release()
         logger.debug('__deal finish')
 
     def __recieve_frame(self):
         try:
-            length = self.__recvall(16)
-            logger.debug('length: %s' % (length))
-            stringData = self.__recvall(int(length))
-            data = np.frombuffer(stringData, np.uint8)
-            decimg = cv.imdecode(data, cv.IMREAD_COLOR)
-        except (RuntimeError, TypeError, NameError):
+            # head_packet: start + length
+            head_packet = self.__recvall(21)
+            start = head_packet[0:5]
+            if start == b'start':
+                length = head_packet[5:21]
+                logger.debug('length: %s' % (length))
+                string_buf = self.__recvall(int(length))
+                data = np.frombuffer(string_buf, np.uint8)
+                decimg = cv.imdecode(data, cv.IMREAD_COLOR)
+            else:
+                logger.error('head packet incorrect')
+                return None
+        except (RuntimeError, TypeError, NameError, IOError):
             return None
 
         return decimg
@@ -107,9 +134,7 @@ class rknn_server:
             
     def __send_result(self, result):
         count = len(result)
-
         len_info = np.empty(count, dtype=np.int32)
-
         ctb_data = b''
 
         for i in range(count):
@@ -121,7 +146,7 @@ class rknn_server:
         logger.debug("ctb_data len: %s" % (len(ctb_data)))
         # self.wfd.write(ctb_data)
         ctb_data_len = len(ctb_data)
-        os.write(self.wfd, str.encode(str(ctb_data_len)).ljust(16))
+        os.write(self.wfd, str.encode('start' + str(ctb_data_len)).ljust(21))
         os.write(self.wfd, ctb_data)
         # os.write(self.wfd, b"111111")
         logger.debug("write ctb data end")
