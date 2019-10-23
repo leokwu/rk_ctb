@@ -5,6 +5,7 @@ import math
 import random
 import cv2
 import sys
+from rknn_server_class import rknn_server
 
 model = './ssd_mobilenet_v1_coco.rknn'
 
@@ -20,6 +21,7 @@ X_SCALE = 10.0
 H_SCALE = 5.0
 W_SCALE = 5.0
 
+np.set_printoptions(threshold=np.inf)
 
 def expit(x):
     return 1. / (1. + math.exp(-x))

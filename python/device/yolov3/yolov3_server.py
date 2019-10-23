@@ -23,6 +23,8 @@ OBJ_THRESH = 0.2
 NMS_THRESH = 0.2
 obj_thresh = -np.log(1/OBJ_THRESH - 1)
 
+np.set_printoptions(threshold=np.inf)
+
 def sigmoid(x):
 	return 1 / (1 + np.exp(-x))
 
