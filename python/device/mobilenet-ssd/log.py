@@ -4,7 +4,7 @@ from logging.handlers import RotatingFileHandler
 
 def InitLog(module_name, log_file):
     logger = logging.getLogger(module_name)
-    logger.setLevel(logging.ERROR)
+    logger.setLevel(logging.DEBUG)
 
     ch = logging.StreamHandler()
     ch.setLevel(logging.DEBUG)

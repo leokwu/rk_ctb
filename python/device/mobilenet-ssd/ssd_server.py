@@ -21,7 +21,6 @@ X_SCALE = 10.0
 H_SCALE = 5.0
 W_SCALE = 5.0
 
-np.set_printoptions(threshold=np.inf)
 
 def expit(x):
     return 1. / (1. + math.exp(-x))
@@ -132,7 +131,7 @@ def post_process(outputs):
 
             if iou >= 0.45:
                 candidateBox[0][j] = -1
-    return vaildCnt, candidateBox, predictions
+    return np.array(vaildCnt), candidateBox, predictions
 
 if __name__ == '__main__':
 
