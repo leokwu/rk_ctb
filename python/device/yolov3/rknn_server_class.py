@@ -73,7 +73,6 @@ class rknn_server:
                         logger.error('decimg is None')
                         continue
                     outputs = rknn.inference(inputs=[decimg])
-                    logger.debug("outputs: %s" % (outputs))
                     data = post_func(outputs)
                     for ws in fd_w_list:
                         if ws is self.wfd:
@@ -88,6 +87,7 @@ class rknn_server:
         try:
             # head_packet: start + length
             head_packet = self.__recvall(21)
+            logger.debug('head_packet: %s' % (head_packet))
             start = head_packet[0:5]
             if start == b'start':
                 length = head_packet[5:21]
@@ -143,10 +143,9 @@ class rknn_server:
             ctb_data = ctb_data + tmp
 
         ctb_data = str.encode(str(count).ljust(8)) + len_info.tostring() + ctb_data
+        logger.debug("ctb_data : %s" % ((ctb_data)))
         logger.debug("ctb_data len: %s" % (len(ctb_data)))
-        # self.wfd.write(ctb_data)
         ctb_data_len = len(ctb_data)
         os.write(self.wfd, str.encode('start' + str(ctb_data_len)).ljust(21))
         os.write(self.wfd, ctb_data)
-        # os.write(self.wfd, b"111111")
         logger.debug("write ctb data end")
