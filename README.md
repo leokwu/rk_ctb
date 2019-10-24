@@ -21,7 +21,7 @@ python
 		
 			python3 yolov3_server.py 
 
-   - **mobilenet-ssd(目前ssd android端还未实现，未调试)**
+   - **mobilenet-ssd**
 
 		1. device服务启动
 		
