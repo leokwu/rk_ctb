@@ -18,9 +18,22 @@ X_SCALE = 10.0
 H_SCALE = 5.0
 W_SCALE = 5.0
 
+'''
 def expit(x):
-    return 1. / (1. + math.exp(-x))
-    # return 1. / (1. + np.exp(-x))
+    x = 1.0 + x / 256.0
+    x *= x
+    x *= x
+    x *= x
+    x *= x
+    x *= x
+    x *= x
+    x *= x
+    x *= x
+    return x
+'''
+def expit(x):
+    # return 1. / (1. + math.exp(-x))
+    return 1. / (1. + np.exp(-x))
 
 def unexpit(y):
     return -1.0 * math.log((1.0 / y) - 1.0);
@@ -95,17 +108,19 @@ if __name__ == '__main__':
     begin_postprocess = time.time()
     # Post Process
     # got valid candidate box
+    score = []
     for i in range(0, NUM_RESULTS):
         topClassScore = -1000
         topClassScoreIndex = -1
 
         # Skip the first catch-all class.
+        score = expit(outputClasses[0][i]);
         for j in range(1, NUM_CLASSES):
-            score = expit(outputClasses[0][i][j]);
+            # score = expit(outputClasses[0][i][j]);
 
-            if score > topClassScore:
+            if score[j] > topClassScore:
                 topClassScoreIndex = j
-                topClassScore = score
+                topClassScore = score[j]
 
         if topClassScore > 0.4:
             candidateBox[0][vaildCnt] = i
@@ -179,10 +194,10 @@ if __name__ == '__main__':
         ymax = max(0.0, min(1.0, predictions[0][n][2])) * INPUT_SIZE
 
         # print("%d @ (%d, %d) (%d, %d) score=%f" % (topClassScoreIndex, xmin, ymin, xmax, ymax, topClassScore))
-        # cv2.rectangle(orig_img, (int(xmin), int(ymin)), (int(xmax), int(ymax)),
-             #(random.random()*255, random.random()*255, random.random()*255), 3)
+        cv2.rectangle(orig_img, (int(xmin), int(ymin)), (int(xmax), int(ymax)),
+             (random.random()*255, random.random()*255, random.random()*255), 3)
 
-    # cv2.imwrite("out.jpg", orig_img)
+    cv2.imwrite("out.jpg", orig_img)
     draw_postprocess = time.time()
     print("total postprocess time: ", draw_postprocess - begin_postprocess)
     

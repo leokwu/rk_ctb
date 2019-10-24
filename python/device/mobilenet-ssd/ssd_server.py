@@ -23,7 +23,7 @@ W_SCALE = 5.0
 
 
 def expit(x):
-    return 1. / (1. + math.exp(-x))
+    return 1. / (1. + np.exp(-x))
 
 def unexpit(y):
     return -1.0 * math.log((1.0 / y) - 1.0);
@@ -68,17 +68,18 @@ def post_process(outputs):
 
     # Post Process
     # got valid candidate box
+    score = []
     for i in range(0, NUM_RESULTS):
         topClassScore = -1000
         topClassScoreIndex = -1
 
         # Skip the first catch-all class.
+        score = expit(outputClasses[0][i]);
         for j in range(1, NUM_CLASSES):
-            score = expit(outputClasses[0][i][j]);
 
-            if score > topClassScore:
+            if score[j] > topClassScore:
                 topClassScoreIndex = j
-                topClassScore = score
+                topClassScore = score[j]
 
         if topClassScore > 0.4:
             candidateBox[0][vaildCnt] = i
