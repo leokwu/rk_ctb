@@ -150,11 +150,14 @@ def post_process(outputs):
         boxes.append(box)
         classes.append(candidateBox[1][i])
         scores.append(candidateScore[0][i])
+    if not classes and not scores:
+        return None, None, None
+
     boxes = np.array(boxes).astype(np.float32)
     classes = np.array(classes).astype(np.int)
     scores = np.array(scores).astype(np.float32)
     logger.debug("type boxes: %s classes: %s scoree: %s\n" % (boxes.dtype, classes.dtype, scores.dtype)) 
-    logger.debug("boxes: %s classes: %s scoree: %s\n" % (boxes, classes, scores)) 
+    logger.debug("boxes: %s classes: %s scores: %s\n" % (boxes, classes, scores)) 
     return boxes, classes, scores
 
 if __name__ == '__main__':
