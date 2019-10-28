@@ -12,6 +12,7 @@
 		3. 安装rknn-toolkit 1808 python版本
 		
 			pip3 install rknn_toolkit-0.9.8.1-cp36-cp36m-linux_aarch64.whl
+		4. 重启计算棒
 
 python
    
