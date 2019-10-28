@@ -6,8 +6,9 @@
    - **系统环境**
 	
 		1. 切换到root用户
-		2. 拷贝更新程序到/usr/bin/ (后续会以固件或升级包的形式更新)
+		2. 拷贝(如果bin是从win拷贝到计算棒需要注意权限)更新程序到/usr/bin/ (后续会以固件或升级包的形式更新)
 		
+			rm -rf /usr/bin/toybrickd 
 			cp usr/bin/* /usr/bin/
 		3. 安装rknn-toolkit 1808 python版本
 		
